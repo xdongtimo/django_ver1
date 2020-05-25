@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        {% load static %}
+        <link rel="stylesheet" href="/redirect?Id=bPkSKQqMZ9erlLi6p21Q4A%3d%3d" static 'css/bootstrap.min.css' %}" type="text/css">
+        <title>{% block title %}{% endblock %}</title>
+        <style>
+            html,body{
+                height: 100%;
+                background-color:white;
+            }
+        </style>
+
+        <div class="row" style="background-image: url({% static 'img/hd.jpg' %});">
+            <div class="col-sm-1" style="text-align: right; margin-right: 10px;margin-top: 10px;">
+                {% if user.username %}
+                    <p>Hello: {{user.username}}</p>
+                    <p><a href="{% url 'logout' %}">Logout</a></p>
+                {% else %}
+                    <p style="color: azure;"><a href="{% url 'register' %}">Register</a>|<a href="{% url 'login' %}">Log in</a></p>
+                {% endif %}
+            </div>
+            <div class="col-sm-1" style=" height: 60px;">
+                <ul class="nav flex-column">
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'blog' %}">Blog</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                </ul>
+            </div>
+            <div class="col-sm=2">
+                <nav class="navbar navbar-light bg-light" style="margin-top: 10px;">
+                    <form class="form-inline" style="text-align: right;">
+                      <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                    </form>
+                </nav>
+            </div>
+        </div>
+
+    </head>
+    <body>
+
+        <div class="container-fluid" style="min-height: 80%;" >
+            <div class="row">     
+                <div class="col-sm-10">
+                        {% block content %}
+                        <center><h2>Vietnam Football Club </h2></center>
+                        <center><img src="/static/img/b.jpg" alt="" style="width:max-content"></center>
+                        {% endblock %}
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="container-fluid" style="background-image: url({% static 'img/ft3.jpg' %}); height: 150px;" >
+                <center>
+                    <h2>Contact with us via...</h2>
+                    <a href="https://www.facebook.com/" >Facebook |</a>
+                    <a href=""> Twitter |</a>
+                    <a href=""> Goodle</a>
+                </center>
+            </div>
+        </footer>
+        </body>
+   
+</html>
