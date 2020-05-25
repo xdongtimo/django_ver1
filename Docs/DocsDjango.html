@@ -1,0 +1,387 @@
+
+!!!!!!!!!!!!!!!!!-- DJANGO FRAMWORK -- !!!!!!!!!!!!!
+
+
+### Cài đặt thư viện Django
+    pip install Django
+
+### Tạo project
+    # CMD vào folder cần tạo:
+        django-admin startproject <tên project> 
+    # chạy web lên localhost
+        python manage.py runserver <ten cổng>
+
+### Tạo WebApp: là nơi tạo ra những trang web nằm toàn bộ trong website
+    # Tạo:
+        python manage.py startapp <tên app>
+    # Khai báo INSTALLED_APPS:
+        settings.py: ... 'home',...
+    # Cập nhập cho phần settings:
+        python manage.py migrate
+    # Xử lý request clien đến web server
+        app home/ views.py
+        from django.shortcuts import render
+        from django.http import HttpResponse
+        # Create your views here.
+        def index(request):
+           response = HttpResponse()
+           response.writelines('<h1>Xin chào</h1>')
+           response.write('Đây là app home')
+           return response
+
+    # Xây dựng bộ urls để ứng với mỗi ulr trên trang web thì sẽ gọi hàm xử lý request đó
+        app home / tạo 1 file urls.py
+            from django.urls import path
+            from . import views
+            
+            urlpatterns = [
+            path('', views.index) * '' tương ứng với gán hàm index từ module views.py
+            ]
+    
+        Quay lại file urls của trang chính: liên kết các webpage vào website
+            from django.contrib import admin
+            from django.urls import path, include
+            
+            urlpatterns = [
+            path('admin/', admin.site.urls),
+            path('home', include('home.urls')),
+            ]
+        # viết test case để kiểm thử phần mềm 
+            app home / tests.py 
+                from django.test import TestCase, SimpleTestCase
+
+                # Create your tests here.
+                class SimpleTest(SimpleTestCase):
+                def test_home_page_status(self):
+                    response = self.client.get('/')
+                    self.assertEquals(response.status_code, 200)
+            chạy test:
+                python manage.py test
+
+
+### Sử dụng template và Jinja trong Python Django
+    # template
+        Ex: 
+        Template: base
+        <title>{% block title %}{% endblock %}</title>
+        <body>
+            Nội dung
+            {% block content %}
+           
+            {% endblock %}
+         </body>
+         Page: home
+         {% extends "pages/base.html" %}
+
+         {% block title %}
+         Home
+         {% endblock %}
+         
+         {% block content %}
+         <h1>Xin Chào</h1>
+         Đây là app home   
+         {% endblock %}
+
+    #Jinja là 1 templtae engine cho python nhằm tạo các template
+
+### Sử dụng Bootstrap để thiết kế website và lưu trữ file tỉnh
+    # Bootstrap: là 1 framwork của css 
+        tải bootstrap về copy vào project / folder / static
+        map giữa đường dẫn url /static vào folder static 
+            ở file settings.py: STATIC_URL = '/static'
+            STATICFILES_DIRS = [
+                os.path.join(BASE_DIR, "static"),
+                ]
+    # Để template sử dụng file tĩnh:
+        {% load static %} or {% load staticfiles %}
+        gọi file css, jss:
+        <link rel="stylesheet" href="/redirect?Id=bPkSKQqMZ9erlLi6p21Q4A%3d%3d" static 'css/bootstrap.min.css' %}" type="text/css">
+
+### Dùng Model tạo bảng Database 
+    # Tạo bảng
+        # Tạo 1 app để quản lý
+        python manage.py startapp blog
+        # Tạo class Post trong models.py 
+            class Post(models.Model):
+                title = models.CharField(max_length =100)
+                body = models.TextField()
+                date = models.DateTimeField(auto_now_add=True)
+
+    # Migrations kiểm tra sự thay đổi tác động đến models
+        # Tạo file Migrations
+            python manage.py makemigrations blog
+        # Chạy file migration để thực hiện đến Database
+            python .\manage.py migrate
+            -> Tạo 1 database db.sqlite3
+
+### Tương tác Database bằng ngôn ngữ python
+    # Sử dụng shell để truy vấn trực tiếp
+        python manage.py shell
+    # VD: nếu muốn tương tác với model Post:
+        import (nằm trong module models trong app home)
+            from blog.models import Post
+
+    # Inser value
+        tạo 1 instance Post và truyền các giá trị vào 
+            a = Post () -> a.title = 'content..' ...  a.save()
+        or  b = Post(title = 'con1..',body = "con 2" ..) 
+    # Select value
+        Post.objects.all() -> nhận 1 QuerySet List chưa các instance Post 
+        or  Post.objects.get(id = 1) 'title'
+        override method __str__ của Class Post để hiển thị tốt hơn:
+            Trong module models
+                def __str__(self):
+                return self.title
+    # Update value 
+    truy vấn tìm instance Post muốn cập nhập:
+        a = Post.objects.get(id= 1)
+        a.body = "New cont1.."
+        a.save()
+
+### Làm việc với hệ thống Admin trong Django
+    # Tạo tài khoản admin để đăng nhập
+        python manage.py createsperuser
+    # Đưa model vào cho Admin quản lý
+        -> file app blog / admin.py. Import model Post qua và register
+            from.models import Post
+            admin.site.register(Post)
+      # Tùy biến Admin
+        Thêm thông tin và chức năng filter and search..
+        Tạo 1 class PostAdmin kế thừa class admin.ModelAdmin 
+        khời tạo biến list_display chứa 2 string title and date
+        Sau đó đưa PostAdmin vào tham số register cùng với Post
+        Ex: list_filter , search_fields .. 
+        admin.site.register(Post,PostAdmin)
+
+
+### Liệt kê danh sách dữ liệu trong model - đưa lên templte hiển thị cho người dùng
+    # Ví dụ lấy bài viên trong Post
+         # Truy vấn bài viết chuyển qua template
+            # blog/views.py
+                from django.shortcuts import render
+                from .models import Post
+                # Create your views here.
+                def list(request):
+                Data = {'Posts': Post.objects.all().order_by('-date')}
+                return render(request, 'blog/blog.html', Data)
+            # thiết kế template 
+                {% extends "pages/base.html" %}
+                {% block title %}Blog{% endblock %}
+                {% block content %}
+                {% for post in Posts %}
+                <h4>{{post.date|date:"d-m-Y"}}<a href="/redirect?Id=XFWwRhLp0mSTd9Wax7NavaaW0OFX0hlzgKM0xKlFX3onFFgtYh6qHM4KXsj1G05uFTfbrCkJYatYZfahoYcjPhzuw9rXFjXjgh1aXxIv8Hc%3d"></a>
+                {% endfor %}
+                {% endblock %}
+            # Tạo path 
+                # khai báo path blog ở urls tổng
+                    path('blog/', include('blog.urls')),
+                # rồi tạo file urls trong app blog
+                    from django.urls import path
+                    from . import views
+                    urlpatterns = [
+                    path('', views.list),
+                    ]
+
+### Hiển thị thông tin bài viết trong python
+    # Tạo url hiển thị bài viết qua id 
+        urls.py
+        urlpatterns = [
+            path('', views.list),
+            part('<int:id>', views.post)
+        ]
+        ** id là kiểu dữ liệu linh động nên: <kiểu dữ liệu:keywork>
+    # viết hàm post để xử lý path
+        blog/views
+                    def post(request,id):
+                    post = Post.objects.get(id=id)
+                    return render(request,'blog/post.html',{'post':post})
+    # Thiết kế template post.html 
+        {% extends "pages/base.html" %} 
+        {% block title %}{{post.title}}{% endblock %}
+        {% block content %}
+        <h3><a href="/redirect?Id=duECimTrtcY%2f9%2fkQF45R8ricuL8rnN1W89bqLQLRmAR%2b2AE1Wuc2%2fsatIaeyTQ2SiSNKPWJ7vem62cw9ZxE2LzZQEtuy6DuaTgL6aoimSYA%3d"
+        <h6>on {{post.date}}</h6>
+        {{post.body|safe|linebreaks}}
+        {% endblock %}
+
+### Loại bỏ hardcoded URP 
+    # Đặt name cho path:
+    ex:    path('',views.list, name='blog')
+           gắn url 'blog' % vào tag<a href="... url 'blog' %"></a>
+
+### Xử lý lỗi 404
+    # lỗi 404 là lỗi không tìm được đường dẫ url 
+    # trả lỗi về
+     Ex: app/blog views.py 
+         from django.http import Http404
+         def post(request, id):
+            try:
+                post = Post.objects.get(id=id)
+            except Post.DoesNotExist:
+                raise Http404("Bài viết không tồn tại")
+            return render(request, 'blog/post.html', {'post': post})
+    # Custom template 404
+        tạo thêm 1 template: error.html 
+        {% extends "pages/base.html" %}
+        {% block title %}Error{% endblock %}
+        {% block content %}
+        <h3>{{message}}</h3>
+        {% endblock %}
+    # override hàm 404 ở views.py / app home 
+        def error(request, exception):
+        return render(request, 'pages/error.html', {'message': exception})
+    # thêm code ở url tổng
+        from django.conf.urls import handler404
+        handler404 = 'home.views.error'
+    # Tắt chế độ debug, báo hot cho phép ở server thật 
+
+### Mô hình MVC trong Django 
+    # MVC là viết tắt của 3 từ Model-View-Controller:
+        Model: Là kiến trúc dữ liệu database, là nơi cung cấp các chức năng xử lý đến database
+        View: Là nơi hiển thị giao diện cho người dùng
+        Controller: Nhiệm vụ nhận các request của người dùng, sau đó sẽ lấy dữ liệu từ model và đưa sang cho view
+    # Trong Django 
+        Django mặc định đã áp dụng mô hình MVC ngay từ đâu, mô hình đó được diễn đạt như sau:
+        Models: Chính là Model trong MVC, đây chính là nơi ta thiết kế ra những table cho database, từ đó Django ORM đã cung cấp những phương thức xử lý, nghiệp vụ lên database
+        Template: Chính là View trong MVC, là những template ta thiết kế ra cho trang web
+        View: Đây là Controller trong MVC, trong view có các function xử lý khi có request từ người dùng
+        Ex: Mô tả:
+            def post(request,id):
+            try:
+                post = Post.objects.get(id=id)
+            except Post.DoesNotExit:
+                raise Http404 ("Bài viết không tồn tại")
+            return render(request,'blogs/post.html',{'post':post})
+            Cách hoạt động như sau:
+                - Hàm post() trong controller để xử lý các request của người dùng
+                - Controller tương tác với models để lấy dữ liệu đưa vào field post giữ 
+                - Controller gửi data (post) cho views, từ đó views xử lý cách hiển thi cho người dùng
+
+### Upload file trong lập trình lên Website
+    # Upload file ảnh
+            thêm field: image trong models : Class Post
+            image = models.ImageField(null=True)
+    # chạy makemigration để lưu biến đỗi database 
+            python manage.py makemigrations 
+    # chạy migrate để add lên database       
+            python manage.py migration 
+    # up ảnh và map đường dẫn url bức ảnh với folder ảnh đó 
+    Tạo 1 folder media
+    vào settings.py khai báo đường dẫn url media và folder media
+        MEDIA_URL = '/media/'
+        MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+    map url media  và folder media này lại 
+        urls.py tổng
+            import static và settings 
+                from django.conf.urls.static import static
+                from django.conf import settings
+            kiểm tra xem Project có DEBUG bằng True không
+                if settings.DEBUG:
+                    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Hiển thị ảnh lên web 
+            vào template blog.html
+                {% for post in Posts %}
+                <h4>{{post.date|date:"d-m-Y"}}<a href="/redirect?Id=bPkSKQqMZ9erlLi6p21Q4A%3d%3d" url 'post' post.id %}">{{post.title}}</a></h4>
+                <img src="{{post.image.url}}" width="500px" height="300px" />
+                {% endfor %}
+
+            dùng post.image.url để lấy giá trị đường dẫn bức ảnh rồi gán src của tag img 
+
+### Tạo Form đăng ký tài khoản 
+            
+
+### Xử lý Login và Loout User
+    # built-in user authentication system extends from system  already of django
+        # config urls in urls / app home 
+            from django.contrib.auth import views as auth_views
+                path('login/',auth_views.LoginView.as_view(template_name="pages/login.html"), name="login"),
+                path('logout/',auth_views.LogoutView.as_view(next_page='/'),name='logout'),
+        # Create template login, Design loginView 
+            <form method="POST">
+                {% csrf_token %}
+                {% for key, value in form.errors.items %}
+                    {{value}}
+                {% endfor %}
+                <p><label>Tài khoản:</label>{{form.username}}</p>
+                <p><label>Mật khẩu:</label>{{form.password}}</p>
+                <input type="hidden" name="next" value="/"/>
+                <input type="submit" value="Đăng nhập"/>
+            </form>
+    # Design template login and logout 
+        # Design base.html - two links help user to login and logout 
+            <div class="col-sm-1">
+                {% if user.username %}
+                    <p>Xin chào {{user.username}}</p>
+                    <p><a href="/redirect?Id=bPkSKQqMZ9erlLi6p21Q4A%3d%3d" url 'logout' %}">Đăng xuất</a></p>
+                {% else %}
+                    <p><a href="/redirect?Id=bPkSKQqMZ9erlLi6p21Q4A%3d%3d" url 'register' %}">Đăng ký</a>|<a href="/redirect?Id=bPkSKQqMZ9erlLi6p21Q4A%3d%3d" url 'login' %}">Đăng nhập</a></p>
+                {% endif %}
+            </div>
+
+
+### Sử dngj Generic View trong django 
+    # Generic View là gì: mẫu chung, không thay đỗi
+        # Sử dụng listview and detailview
+          app blog/ views.py  rechange list () = class Listview, post () = class DetailView
+                from django.shortcuts import render
+                from .models import Post
+                from django.views.generic import ListView, DetailView
+                # Create your views here.
+                class PostListView(ListView):
+                    queryset = Post.objects.all().order_by('-date')
+                    template_name = 'blog/blog.html'
+                    context_object_name = 'Posts'
+                    paginate_by = 10
+                class PostDetailView(DetailView):
+                    model = Post
+                    template_name = 'blog/post.html'
+        # Edit urls.py 
+                urlpatterns = [
+                    path('', views.PostListView.as_view(), name='blog'),
+                    path('<int:pk>/', views.PostDetailView.as_view(), name='post'),
+                ]
+        # Edit template blog2.html 
+        {% extends "pages/base.html" %}
+ 
+        {% block title %}Blog{% endblock %}
+         
+        {% block content %}
+                {% for post in Posts %}
+                    <h4>{{post.date|date:"d-m-Y"}}<a href="/redirect?Id=bPkSKQqMZ9erlLi6p21Q4A%3d%3d" url 'post' post.id %}">{{post.title}}</a></h4>
+                    <img src="{{post.image.url}}" width="500px" height="300px" />
+                {% endfor %}
+                <br/>
+                {% if page_obj.has_next %}
+                    <a href="/redirect?Id=5X7PNpoYSAf8ixnSnRj01TqsLDVRgREOSN1%2f%2fTHd3cqOH%2fnBsmGomt6wNekyuxMZtv4DKMfpRucdayOMARv5iK897ba1V6oesyqoyKTuvIU%3d" theo</a>
+                {% endif %}
+                {% endblock %}
+        # Gọi Generic View tối giản trong urls.py 
+                from django.urls import path
+                from .models import Post
+                from django.views.generic import ListView, DetailView
+
+                urlpatterns = [
+                path('', ListView.as_view(
+                    queryset = Post.objects.all().order_by('-date'),
+                    template_name = 'blog/blog.html',
+                    context_object_name = 'Posts',
+                    paginate_by = 10)
+                    , name='blog'),
+                path('<int:pk>/', DetailView.as_view(
+                    model = Post,
+                    template_name = 'blog/post.html'), 
+                    name='post'),
+                ]
+
+### Xử lý bình luận trong django 
+        # Thiết kế bảng comment:
+            app blog / models.py 
+                from django.conf import settings
+                    class Comment(models.Model):
+                    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+                    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+                    body = models.TextField()
+                    date = models.DateTimeField(auto_now_add=True)
+
+        # Tạo Form Comment 
+        
